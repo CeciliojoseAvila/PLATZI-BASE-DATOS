@@ -1,0 +1,329 @@
+/-- Lo que quieres mostrar = SELECT
+-- De donde voy a tomar los datos = FROM
+-- Los filtros de los datos que quieres mostrar = WHERE
+-- Los rubros por los que me interesa agrupar mi información = GROUP BY
+-- El orden en que quiero presentar mi información ORDER BY
+-- Los filtros que quiero que mis datos agrupados tengan HAVING
+
+-- ¿Cuántos tags tienen cada post?
+SELECT  posts.titulo, COUNT(*) AS num_etiquetas
+FROM    posts
+    INNER JOIN posts_etiquetas ON posts.id = posts_etiquetas.post_id
+    INNER JOIN etiquetas ON etiquetas.id = posts_etiquetas.etiqueta_id
+GROUP BY posts.id;
+
+-- ¿Cuál es el tag que mas se repite?
+SELECT  etiquetas.nombre_etiqueta, COUNT(*) AS ocurrencias
+FROM etiquetas
+    INNER JOIN posts_etiquetas ON etiquetas.id = posts_etiquetas.etiqueta_id
+GROUP BY etiquetas.id
+ORDER BY ocurrencias DESC;
+
+-- Los tags que tiene un post separados por comas
+SELECT  posts.titulo, GROUP_CONCAT(nombre_etiqueta)
+FROM    posts
+    INNER JOIN posts_etiquetas ON posts.id = posts_etiquetas.post_id
+    INNER JOIN etiquetas ON etiquetas.id = posts_etiquetas.etiqueta_id
+GROUP BY posts.id;
+
+-- ¿Que etiqueta no tiene ningun post asociado?
+SELECT	*
+FROM	etiquetas 
+	LEFT JOIN posts_etiquetas on etiquetas.id = posts_etiquetas.etiqueta_id
+WHERE	posts_etiquetas.etiqueta_id IS NULL;
+
+-- Las categorías ordenadas por numero de posts
+SELECT c.nombre_categoria, COUNT(*) AS cant_posts
+FROM    categorias AS c
+    INNER JOIN posts AS p on c.id = p.categoria_id
+GROUP BY c.id
+ORDER BY cant_posts DESC;
+
+-- ¿Cuál es la categoría que tiene mas posts?
+SELECT c.nombre_categoria, COUNT(*) AS cant_posts
+FROM    categorias AS c
+    INNER JOIN posts AS p on c.id = p.categoria_id
+GROUP BY c.id
+ORDER BY cant_posts DESC
+LIMIT 1;
+
+-- ¿Que usuario ha contribuido con mas post?
+SELECT u.nickname, COUNT(*) AS cant_posts
+FROM    usuarios AS u
+    INNER JOIN posts AS p on u.id = p.usuario_id
+GROUP BY u.id
+ORDER BY cant_posts DESC
+LIMIT 1;
+
+-- ¿De que categorías escribe cada usuario?
+SELECT u.nickname, COUNT(*) AS cant_posts,  GROUP_CONCAT(nombre_categoria)
+FROM    usuarios AS u
+    INNER JOIN posts AS p ON u.id = p.usuario_id
+    INNER JOIN categorias AS c ON c.id = p.categoria_id
+GROUP BY u.id;
+
+-- ¿Que usuario no tiene ningun post asociado?
+SELECT	*
+FROM	usuarios 
+	LEFT JOIN posts on usuarios.id = posts.usuario_id
+WHERE	posts.usuario_id IS NULL
+
+
+
+/// crear tabla:
+create table people(
+  person_id integer primary key not null,
+  last_name varchar(255) null,
+  first_name varchar(255) null,
+  address  varchar(255) null
+
+)
+
+// insertar a la tabla:
+
+INSERT INTO `platziblog`.`people` (`person_id`, `last_name`, `first_name`, `address`, `city`) 
+VALUES ('1', 'Vásquez', 'Israel', 'Calle Famosa Num 1', 'México'),
+	       ('2', 'Hernández', 'Mónica', 'Reforma 222', 'México'),
+	       ('3', 'Alanis', 'Edgar', 'Central 1', 'Monterrey');
+
+/// consultas a tablas:
+
+
+
+SELECT	usuario_id AS id, nickname, fecha_publicacion AS fecha, estatus, nombre_categoria AS Categoria
+FROM usuarios
+INNER JOIN posts ON usuarios.id=posts.usuario_id
+INNER JOIN categorias ON posts.categoria_id=categorias.id
+WHERE	estatus = 'Activo'  AND categoria_id = 2;
+
+SELECT usuarios.nickname as Autor, posts.titulo AS Título, categorias.nombre_categoria AS Categoría, etiquetas.nombre_etiqueta As Etiqueta
+FROM	usuarios
+	JOIN posts ON usuarios.id = posts.usuario_id
+    JOIN categorias ON posts.categoria_id = categorias.id
+	JOIN posts_etiquetas ON posts.id = posts_etiquetas.post_id
+    JOIN etiquetas ON posts_etiquetas.etiqueta_id = etiquetas.id
+
+use platziblog;
+
+-- todos los usuarios tengan o no  un post relacionado
+ select*
+ from usuarios as u
+ left join posts as p
+ on u.id = p.usuario_id;
+ 
+-- todos los usuarios que no han hecho post
+ select*
+ from usuarios as u
+ left join posts as p
+ on u.id = p.usuario_id
+ where p.usuario_id IS NULL;
+
+-- todos los post esten o no asociados con un usuario
+ select*
+ from usuarios as u
+ right join posts as p
+ on u.id = p.usuario_id;
+ 
+ -- los post que no estan asociados con un usuario
+ select*
+ from usuarios as u
+ right join posts as p
+ on u.id = p.usuario_id
+ where u.id is null;
+ 
+ -- todos los usuarios que sí hayan hecho posts, con su respectivo post
+  select*
+ from usuarios as u
+ inner join posts as p
+ on u.id = p.usuario_id;
+ 
+ -- conjunto universo UNION
+  select*
+ from usuarios as u
+ left join posts as p
+ on u.id = p.usuario_id
+ UNION
+  select*
+ from usuarios as u
+ right join posts as p
+ on u.id = p.usuario_id;
+ 
+ -- los usuarios que no hayan hecho un post, junto con los post que no tiene usuario
+   select*
+ from usuarios as u
+ left join posts as p
+ on u.id = p.usuario_id
+ where p.usuario_id is NULL
+ UNION
+  select*
+ from usuarios as u
+ right join posts as p
+ on u.id = p.usuario_id
+ where p.usuario_id is NULL;
+
+<select * from posts
+where month(fecha_publicacion) between '01' and '12';
+select * from posts
+where day(fecha_publicacion) between '01' and '28';> 
+
+SELECT * FROM posts WHERE
+NOT estatus = 'activo'
+AND
+NOT id > 60
+AND
+NOT YEAR(fecha_publicacion) <> 2025;
+
+
+//
+1
+select * from posts
+where titulo like '%El%'
+and estatus != 'inactivo'
+and usuarios_id > 1 
+and year(fecha_publicacion) = 2025
+and categorias_id > 2;
+
+// 
+SELECT estatus, COUNT(*) post_quantity
+FROM posts
+GROUP BY estatus;
+
+SELECT YEAR(fecha_publicacion) AS post_year, COUNT(*) AS post_quantity
+FROM posts
+GROUP BY post_year;
+
+SELECT estatus,MONTHNAME(fecha_publicacion) AS post_month, COUNT(*) AS post_quantity
+FROM posts
+GROUP BY estatus, post_month;
+
+//
+SELECT MONTHNAME(fecha_publicacion) AS mes, estatus, COUNT(*) AS cantidad
+FROM posts
+GROUP BY estatus, mes
+HAVING cantidad > 1 AND mes IN ('December', 'May') ;
+
+-- Ordenar los posts por el campo fecha_publicacion de forma ascendente.
+Select * From posts 
+Order By fecha_publicacion Asc;
+
+-- Ordenar los posts por el campo fecha_publicacion de forma descendente.
+Select * From posts 
+Order By fecha_publicacion Desc;
+
+
+-- Ordenar los posts por el campo fecha_publicacion de forma ascendente.
+Select * From posts 
+Order By fecha_publicacion;
+
+-- Mostrar los primeros cinco posts que resulten de la consulta.
+Select * From posts 
+Order By fecha_publicacion Asc
+Limit 5;
+
+-- Ordenar los posts por el campo Usuario_Id de forma ascendente, exceptuando los valores nulos.
+Select * From posts 
+Where Usuario_Id Is Not Null 
+Order By Usuario_Id Asc;
+
+-- Ordenar los posts por el campo Usuario_Id de forma ascendente, exceptuando los valores nulos y que su Id esten entre 60 y 70.
+Select * From posts Where 
+Usuario_Id Is Not Null 
+and Id Between 60 and 70
+Order By Usuario_Id Asc;
+
+-- Agrupar por estatus y mes. Contar los posts y mostrar los que se han mayores a uno. Finalmente se debe ornear por mes.
+Select MonthName(fecha_publicacion) As Mes, status, Count(*) As Cant
+From posts Group By status, Mes
+Having Cant > 1
+Order By Mes;
+
+-- Agrupar por Año y mes. Contar los posts y mostrar los que sean mayores a uno. Finalmente se debe ornear por Año.
+Select Year(fecha_publicacion) As Año, MonthName(fecha_publicacion) As Mes, status, Count(*) As Cant
+From posts Group By Año, Mes
+Having Cant > 1
+Order By Año;
+Responder
+Natalia Ortiz Maldonado
+Natalia Ortiz Maldonado
+
+Hace 2 años
+
+11
+Faltó el operador OFFSET
+
+SELECT * FROM artists LIMIT 5 OFFSET [Number of rows to skip];
+
+//
+SELECT teachers.name AS teacher,SUM(courses.n_reviews) AS total_reviews
+FROM teachers 
+inner join courses ON teachers.id = courses.teacher_id
+GROUP BY courses.teacher_id
+ORDER BY total_reviews DESC;
+
+//
+
+SELECT new_table_projection.date,
+COUNT(*) AS posts_count
+FROM (
+	SELECT DATE(MIN(fecha_publicacion)) AS DATE, YEAR(fecha_publicacion) AS post_year
+    FROM posts
+    GROUP BY post_year
+) AS new_table_projection
+GROUP BY new_table_projection.date
+ORDER BY new_table_projection.date;
+
+//
+SELECT name_product, product_description, image_url, barcode, id_pharm, name_category
+FROM (
+	SELECT name_product, product_description, image_url, id_category, barcode, id_pharm
+	FROM (
+		SELECT id_product, barcode, id_pharm
+		FROM barcodes_products
+		WHERE amount > 0
+	) AS data_id_filter
+	LEFT JOIN products on products.id_product = data_id_filter.id_product
+) as id_table
+LEFT JOIN product_categories ON product_categories.id_category = id_table.id_category
+
+
+//
+Quiero obtener todos los post creados 
+
+SELECT: Lo que quieres mostrar
+Nickname
+Titulo del post
+FROM: De dónde voy a tomar los datos
+Tabla usuarios y post
+WHERE: Los filtros de los datos que quieres mostrar
+Deben de ser de edgar@com
+GROUP BY: Los rubros por los que me interesa agrupar la información
+No deseo agrupar
+ORDER BY: El orden en que quiero presentar mi información
+por fecha de publicación
+HAVING: Los filtros que quiero que mis datos agrupados tengan
+
+Igualmente me gustaría agregar lo siguiente:
+’
+
+WHERE utiliza las propiedades:
+–> LIKE, nos ayuda a filtrar los registros cuando solo conocemos una parte de la información.
+–> BETWEEN, nos ayuda a filtrar registros que estén entre un rango.
+‘
+También debemos de tener en cuenta que si la condición es numérica se escribe sin comillas simples de lo contrario la condición se debe escribir dentro de comillas simples, Ej: ‘Texto’.
+’
+ORDER BY utiliza los siguientes criterios:
+–> ASC. Ordena de forma ascendente.
+–> DESC. Ordena de forma descendente
+–> LIMIT. Limita la cantidad de resultados para mostrar en el query, Ej: Mostrar los 5 primeros registros.
+'
+También se pueden hacer NESTED QUERIES (Consultas o Queries Anidados), esto significa que podemos hacer un query dentro de otro query.
+
+//
+SELECT posts.titulo, GROUP_CONCAT(DISTINCT etiquetas.nombre ORDER BY etiquetas.nombre SEPARATOR " - "), posts.id, COUNT(*) AS num_etiquetas
+FROM posts
+INNER JOIN posts_etiquetas
+ON posts.id = posts_etiquetas.post_id
+INNER JOIN etiquetas
+ON etiquetas.id = posts_etiquetas.etiqueta_id
+GROUP BY posts.id
+ORDER BY num_etiquetas;
